@@ -394,7 +394,7 @@ impl Default for Config {
 }
 
 fn default_enable_split_storage_view_client() -> bool {
-    false
+    true
 }
 
 fn default_cold_store_initial_migration_batch_size() -> usize {
