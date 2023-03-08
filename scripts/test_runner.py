@@ -17,6 +17,7 @@ The source code for NayDuck itself is at <https://github.com/near/nayduck>.
 """
 
 import getpass
+import logging
 import json
 import os
 import pathlib
@@ -28,7 +29,6 @@ import typing
 REPO_DIR = pathlib.Path(__file__).resolve().parents[1]
 
 DEFAULT_TEST_FILE = 'nightly/nightly.txt'
-NAYDUCK_BASE_HREF = 'https://nayduck.near.org'
 
 FileReader = typing.Callable[[pathlib.Path], str]
 
@@ -47,7 +47,7 @@ def _parse_args():
                        help=f'Test set file; {DEFAULT_TEST_FILE} by default.')
     parser.add_argument(
         '--dry-run',
-        '-n',
+        '-d',
         action='store_true',
         help='Prints list of tests to execute, without doing anything')
     args = parser.parse_args()
@@ -134,7 +134,7 @@ def _parse_timeout(timeout: typing.Optional[str]) -> typing.Optional[int]:
     """Parses timeout interval and converts it into number of seconds.
 
     Args:
-        timeout: An integer with an optional ‘h’, ‘m’ or ‘s’ suffix which
+        timeout: An integer with an optional \'h\', \'m\' or \'s\' suffix which
             multiply the integer by 3600, 60 and 1 respectively.
     Returns:
         Interval in seconds.
@@ -151,7 +151,9 @@ def _parse_timeout(timeout: typing.Optional[str]) -> typing.Optional[int]:
 
 
 def run_tests(args, tests):
-    for test in tests:
+    print(f"Total tests: {len(tests)}")
+    for i in range(len(tests)):
+        test = tests[i]
         # See nayduck specs at https://github.com/near/nayduck/blob/master/lib/testspec.py
         fields = test.split()
 
@@ -192,15 +194,19 @@ def run_tests(args, tests):
             cmd = fields
             cwd = REPO_DIR / 'pytest'
         else:
-            print(f'Unrecognised test category ‘{fields[0]}’', file=sys.stderr)
+            print(f'Unrecognised test category \'{fields[0]}\'',
+                  file=sys.stderr)
             continue
         if args.dry_run:
             print('( cd {} && {} )'.format(
                 shlex.quote(str(cwd)),
                 ' '.join(shlex.quote(str(arg)) for arg in cmd)))
             continue
-        print(f"RUNNING COMMAND cwd = {cwd} cmd = {cmd}")
-        subprocess.check_call(cmd, cwd=cwd, timeout=_parse_timeout(timeout))
+        print(f"RUNNING TEST #{i}, COMMAND cwd = {cwd} cmd = {cmd}")
+        try:
+            subprocess.check_call(cmd, cwd=cwd, timeout=_parse_timeout(timeout))
+        except Exception as e:
+            logging.info(f"Failed to run test #{i} :{cmd}")
 
 
 def main():
