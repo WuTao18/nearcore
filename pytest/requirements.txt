@@ -16,6 +16,7 @@ semver
 toml
 tqdm
 buildkite-test-collector
+pytest
 pytest-rerunfailures
 pytest-timeout
 pytest-asyncio
