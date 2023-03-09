@@ -119,8 +119,7 @@ steps:
     branches: "!master"
     timeout: 600
     agents:
-      # - "queue=gcp-testing"
-      - "distro=amazonlinux"
+      - "queue=gcp-testing"
 
   # - label: "backward compatible"
   #   command: |
