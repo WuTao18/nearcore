@@ -18,6 +18,8 @@ import typing
 import uuid
 from rc import gcloud
 from retrying import retry
+import socket
+from contextlib import closing
 
 import base58
 
@@ -35,6 +37,13 @@ cleanup_remote_nodes_atexit_registered = False
 
 class DownloadException(Exception):
     pass
+
+
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 
 def atexit_cleanup(node):
@@ -672,7 +681,7 @@ def spin_up_node(config,
             "127.0.0.1:%s" % (24567 + 10 + bl_ordinal)
             for bl_ordinal in blacklist
         ]
-        node = LocalNode(24567 + 10 + ordinal, 3030 + 10 + ordinal,
+        node = LocalNode(find_free_port(), find_free_port(),
                          near_root, node_dir, blacklist,
                          config.get('binary_name'), single_node)
     else:
@@ -696,7 +705,8 @@ def spin_up_node(config,
 
     node.start(boot_node=boot_node, skip_starting_proxy=skip_starting_proxy)
     time.sleep(3)
-    logger.info(f"node {ordinal} started")
+    logger.info(
+        f"node {ordinal} started. port:{node.port}, rpc_port:{node.rpc_port}")
     return node
 
 
@@ -830,7 +840,8 @@ def start_cluster(num_nodes,
                   config,
                   genesis_config_changes,
                   client_config_changes,
-                  message_handler=None):
+                  message_handler=None,
+                  prefix='test'):
     if not config:
         config = load_config()
 
@@ -846,7 +857,7 @@ def start_cluster(num_nodes,
         near_root, node_dirs = init_cluster(num_nodes, num_observers,
                                             num_shards, config,
                                             genesis_config_changes,
-                                            client_config_changes)
+                                            client_config_changes, prefix)
 
     proxy = NodesProxy(message_handler) if message_handler is not None else None
     ret = []

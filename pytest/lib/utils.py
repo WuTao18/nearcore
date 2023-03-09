@@ -22,6 +22,16 @@ from configured_logger import logger
 from transaction import sign_payment_tx
 
 
+def get_test_name():
+    """ Returns test name from env var
+
+    Example of env var:
+        PYTEST_CURRENT_TEST = sandbox/test_sandbox.py::test_patch_state (call)
+
+    """
+    return os.environ.get('PYTEST_CURRENT_TEST').split('::')[-1].split(' ')[0]
+
+
 class TxContext:
 
     def __init__(self, act_to_val, nodes):
