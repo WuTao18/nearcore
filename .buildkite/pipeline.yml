@@ -116,7 +116,7 @@ steps:
     branches: "!master"
     timeout: 600
     agents:
-      - "distro=gcp-testing"
+      - "queue=gcp-testing"
 
   # - label: "backward compatible"
   #   command: |
