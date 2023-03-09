@@ -1,7 +1,6 @@
 env:
   RUST_BACKTRACE: short
   RUSTFLAGS: -D warnings
-  BUILDKITE_ANALYTICS_TOKEN: ${{ secrets.BUILDKITE_ANALYTICS_TOKEN }}
 
 steps:
   # - label: "protobuf backward compatibility"
