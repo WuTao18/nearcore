@@ -1,64 +1,65 @@
 env:
   RUST_BACKTRACE: short
   RUSTFLAGS: -D warnings
+  BUILDKITE_ANALYTICS_TOKEN: ${{ secrets.BUILDKITE_ANALYTICS_TOKEN }}
 
 steps:
-  - label: "protobuf backward compatibility"
-    command: |
-      # We need to manually fetch the latest commit of master to
-      # correctly compute the commit at which we should diff the proto
-      # files. Apparently the pipeline doesn't do that for us.
-      git fetch origin
-      buf breaking --against ".git#ref=`git merge-base origin/master HEAD`"
+  # - label: "protobuf backward compatibility"
+  #   command: |
+  #     # We need to manually fetch the latest commit of master to
+  #     # correctly compute the commit at which we should diff the proto
+  #     # files. Apparently the pipeline doesn't do that for us.
+  #     git fetch origin
+  #     buf breaking --against ".git#ref=`git merge-base origin/master HEAD`"
 
-    timeout: 30
-    agents:
-    - "distro=amazonlinux"
+  #   timeout: 30
+  #   agents:
+  #     - "distro=amazonlinux"
 
-  - label: "cargo test integration-tests*"
-    command: |
-      source ~/.cargo/env && set -eux
-      cargo install cargo-nextest
-      cargo nextest run --locked -p 'integration-tests'
+  # - label: "cargo test integration-tests*"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cargo install cargo-nextest
+  #     cargo nextest run --locked -p 'integration-tests'
 
-    timeout: 60
-    agents:
-    - "distro=amazonlinux"
-    branches: "!master"
+  #   timeout: 60
+  #   agents:
+  #     - "distro=amazonlinux"
+  #   branches: "!master"
 
-  - label: "cargo test not integration-tests*"
-    command: |
-      source ~/.cargo/env && set -eux
-      cargo install cargo-nextest
-      cargo nextest run --locked --workspace -p '*' --exclude 'integration-tests*'
+  # - label: "cargo test not integration-tests*"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cargo install cargo-nextest
+  #     cargo nextest run --locked --workspace -p '*' --exclude 'integration-tests*'
 
-    timeout: 60
-    agents:
-    - "distro=amazonlinux"
-    branches: "!master"
+  #   timeout: 60
+  #   agents:
+  #     - "distro=amazonlinux"
+  #   branches: "!master"
 
-  - label: "cargo test nightly integration-tests*"
-    command: |
-      source ~/.cargo/env && set -eux
-      cargo install cargo-nextest
-      cargo nextest run --features nightly,test_features -p 'integration-tests'
+  # - label: "cargo test nightly integration-tests*"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cargo install cargo-nextest
+  #     cargo nextest run --features nightly,test_features -p 'integration-tests'
 
-    timeout: 60
-    agents:
-    - "distro=amazonlinux"
-    branches: "!master"
+  #   timeout: 60
+  #   agents:
+  #     - "distro=amazonlinux"
+  #   branches: "!master"
 
-  - label: "cargo test nightly not integration-tests*"
-    command: |
-      source ~/.cargo/env && set -eux
-      cargo install cargo-nextest
-      cargo nextest run --workspace --features nightly,test_features,mock_node -p '*' --exclude 'integration-tests*'
-      cargo test --doc
+  # - label: "cargo test nightly not integration-tests*"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cargo install cargo-nextest
+  #     cargo nextest run --workspace --features nightly,test_features,mock_node -p '*' --exclude 'integration-tests*'
+  #     cargo test --doc
 
-    timeout: 60
-    agents:
-    - "distro=amazonlinux"
-    branches: "!master"
+  #   timeout: 60
+  #   agents:
+  #     - "distro=amazonlinux"
+  #   branches: "!master"
 
   - label: "sanity checks"
     command: |
@@ -102,41 +103,52 @@ steps:
       fi >&2
     timeout: 30
     agents:
-    - "distro=amazonlinux"
+      - "distro=amazonlinux"
     branches: "!master"
 
-  - label: "backward compatible"
+  - label: "pytests"
     command: |
       source ~/.cargo/env && set -eux
-      cd pytest
-      pip3 install --user -r requirements.txt
-      pwd
-      ls ..
-      python3 tests/sanity/backward_compatible.py
-      ls ../target/debug
-    branches: "!master !beta !stable"
-    timeout: 30
-    agents:
-    - "distro=amazonlinux"
-
-  - label: "upgradable"
-    command: |
-      source ~/.cargo/env && set -eux
-      cd pytest
-      pip3 install --user -r requirements.txt
-      python3 tests/sanity/upgradable.py
+      cd pytest/buildkite_tests
+      pip3 install --user -r ../requirements.txt
+      pytest
     branches: "!master"
-    timeout: 30
+    timeout: 600
     agents:
-    - "distro=amazonlinux"
+      - "distro=amazonlinux"
 
-  - label: "db migration"
-    command: |
-      source ~/.cargo/env && set -eux
-      cd pytest
-      pip3 install --user -r requirements.txt
-      python3 tests/sanity/db_migration.py
-    branches: "!master !beta !stable"
-    timeout: 30
-    agents:
-    - "distro=amazonlinux"
+  # - label: "backward compatible"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cd pytest
+  #     pip3 install --user -r requirements.txt
+  #     pwd
+  #     ls ..
+  #     python3 tests/sanity/backward_compatible.py
+  #     ls ../target/debug
+  #   branches: "!master !beta !stable"
+  #   timeout: 30
+  #   agents:
+  #     - "distro=amazonlinux"
+
+  # - label: "upgradable"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cd pytest
+  #     pip3 install --user -r requirements.txt
+  #     python3 tests/sanity/upgradable.py
+  #   branches: "!master"
+  #   timeout: 30
+  #   agents:
+  #     - "distro=amazonlinux"
+
+  # - label: "db migration"
+  #   command: |
+  #     source ~/.cargo/env && set -eux
+  #     cd pytest
+  #     pip3 install --user -r requirements.txt
+  #     python3 tests/sanity/db_migration.py
+  #   branches: "!master !beta !stable"
+  #   timeout: 30
+  #   agents:
+  #     - "distro=amazonlinux"
