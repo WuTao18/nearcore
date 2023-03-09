@@ -111,7 +111,8 @@ steps:
       cargo build -p neard --bin neard --features nightly
       cd pytest/buildkite_tests
       pip3 install --user -r ../requirements.txt
-      pytest
+      # export PATH="$HOME/.local/bin:$PATH"
+      python -m pytest
     branches: "!master"
     timeout: 600
     agents:
