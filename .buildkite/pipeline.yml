@@ -107,6 +107,9 @@ steps:
 
   - label: "pytests"
     command: |
+      echo "cargo env::"
+      cat ~/.cargo/env
+      echo "no cargo env"
       source ~/.cargo/env && set -eux
       cargo build -p neard --bin neard --features nightly
       cd pytest/buildkite_tests
@@ -116,7 +119,8 @@ steps:
     branches: "!master"
     timeout: 600
     agents:
-      - "queue=gcp-testing"
+      # - "queue=gcp-testing"
+      - "distro=amazonlinux"
 
   # - label: "backward compatible"
   #   command: |
