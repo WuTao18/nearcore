@@ -64,6 +64,7 @@ steps:
     command: |
       source ~/.cargo/env && set -eux
       rustc --version && cargo --version
+      cargo install cargo-deny
       cargo run -p themis --release
       if [ -e deny.toml ]; then
         cargo-deny --all-features check bans
